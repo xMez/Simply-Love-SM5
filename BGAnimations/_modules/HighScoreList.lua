@@ -1,4 +1,4 @@
-local af = Def.ActorFrame{Name="HighScoreList"}
+local af = Def.ActorFrame { Name = "HighScoreList" }
 
 -- ---------------------------------------------
 -- setup involving optional arguments that might have been passed in via a key/value table
@@ -18,8 +18,10 @@ local profile = args.Profile or PROFILEMAN:GetMachineProfile()
 
 -- optionally provide Song/Course and Steps/Trail objects; if none are provided
 -- default to using whatever GAMESTATE currently thinks they are
-local SongOrCourse = args.SongOrCourse or (GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentCourse() or GAMESTATE:GetCurrentSong())
-local StepsOrTrail = args.StepsOrTrail or ((args.RoundsAgo==nil or args.RoundsAgo==1) and (GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentTrail(player) or GAMESTATE:GetCurrentSteps(player)))
+local SongOrCourse = args.SongOrCourse or
+(GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentCourse() or GAMESTATE:GetCurrentSong())
+local StepsOrTrail = args.StepsOrTrail or
+((args.RoundsAgo == nil or args.RoundsAgo == 1) and (GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentTrail(player) or GAMESTATE:GetCurrentSteps(player)))
 if not (SongOrCourse and StepsOrTrail) then return af end
 
 local Font = args.Font or "Common Normal"
@@ -28,18 +30,19 @@ local row_height = args.RowHeight or 22
 -- ---------------------------------------------
 -- setup that can occur now that the arguments have been handled
 
-local HighScoreList = profile:GetHighScoreList(SongOrCourse,StepsOrTrail)
+local HighScoreList = profile:GetHighScoreList(SongOrCourse, StepsOrTrail)
 local HighScores = HighScoreList:GetHighScores()
 if not HighScores then return af end
 
 -- don't attempt to retrieve more HighScores than are actually saved to the desired Profile (machine or player)
-local MaxHighScores = PREFSMAN:GetPreference("MaxHighScoresPerListFor" .. (profile==PROFILEMAN:GetMachineProfile() and "Machine" or "Player"))
+local MaxHighScores = PREFSMAN:GetPreference("MaxHighScoresPerListFor" ..
+(profile == PROFILEMAN:GetMachineProfile() and "Machine" or "Player"))
 NumHighScores = math.min(NumHighScores, MaxHighScores)
 
 
 local months = {}
-for i=1,12 do
-	table.insert(months, THEME:GetString("HighScoreList", "Month"..i))
+for i = 1, 12 do
+	table.insert(months, THEME:GetString("HighScoreList", "Month" .. i))
 end
 
 -- ---------------------------------------------
@@ -63,7 +66,7 @@ local highscoreindex
 
 if args.RoundsAgo then
 	local pss = STATSMAN:GetPlayedStageStats(args.RoundsAgo):GetPlayerStageStats(player)
-	highscoreindex = (profile==PROFILEMAN:GetMachineProfile() and pss:GetMachineHighScoreIndex() or pss:GetPersonalHighScoreIndex())
+	highscoreindex = (profile == PROFILEMAN:GetMachineProfile() and pss:GetMachineHighScoreIndex() or pss:GetPersonalHighScoreIndex())
 	-- +1 because HighScoreIndex values are 0-indexed
 	highscoreindex = highscoreindex + 1
 
@@ -77,17 +80,17 @@ if args.RoundsAgo then
 	if highscoreindex <= 0 then
 		for i, highscore in ipairs(HighScores) do
 			local name
-		 	if  pss:GetHighScore():GetScore() == highscore:GetScore()
-			and pss:GetHighScore():GetDate()  == highscore:GetDate()
-			and
-			(
-				name == PROFILEMAN:GetProfile(player):GetLastUsedHighScoreName()
-				or
+			if pss:GetHighScore():GetScore() == highscore:GetScore()
+				and pss:GetHighScore():GetDate() == highscore:GetDate()
+				and
 				(
-					(#GAMESTATE:GetHumanPlayers()==1 and name=="EVNT")
-					or (highscore:GetScore() ~= STATSMAN:GetPlayedStageStats(args.RoundsAgo):GetPlayerStageStats(OtherPlayer[player]):GetHighScore():GetScore())
+					name == PROFILEMAN:GetProfile(player):GetLastUsedHighScoreName()
+					or
+					(
+						(#GAMESTATE:GetHumanPlayers() == 1 and name == "EVNT")
+						or (highscore:GetScore() ~= STATSMAN:GetPlayedStageStats(args.RoundsAgo):GetPlayerStageStats(OtherPlayer[player]):GetHighScore():GetScore())
+					)
 				)
-			)
 			then
 				highscoreindex = i
 				break
@@ -107,9 +110,8 @@ end
 
 -- ---------------------------------------------
 
-for i=lower,upper do
-
-	local row_index = i-lower
+for i = lower, upper do
+	local row_index = i - lower
 	local score, name, date
 	local numbers = {}
 
@@ -120,55 +122,55 @@ for i=lower,upper do
 
 		-- make the date look nice
 		for number in string.gmatch(date, "%d+") do
-			numbers[#numbers+1] = number
-	    end
-		date = months[tonumber(numbers[2])] .. " " ..  numbers[3] ..  ", " .. numbers[1]
+			numbers[#numbers + 1] = number
+		end
+		date = months[tonumber(numbers[2])] .. " " .. numbers[3] .. ", " .. numbers[1]
 	else
-		name	= "----"
-		score	= "------"
-		date	= "----------"
+		name = "----"
+		score = "------"
+		date = "----------"
 	end
 
-	local row = Def.ActorFrame{Name="HighScoreEntry"..(row_index+1)}
+	local row = Def.ActorFrame { Name = "HighScoreEntry" .. (row_index + 1) }
 
 	-- if we wanted to compare a player's performance against the list of highscores we are returning
 	if args.RoundsAgo then
 		-- then specify and OnCommand that will check if this row represents the player's performance for this round
-		row.OnCommand=function(self)
+		row.OnCommand = function(self)
 			if i == highscoreindex then
 				-- apply a diffuseshift effect to draw attentiont to this row
-				self:diffuseshift():effectperiod(4/3)
-				self:effectcolor1( PlayerColor(player) )
-				self:effectcolor2( Color.White )
+				self:diffuseshift():effectperiod(4 / 3)
+				self:effectcolor1(PlayerColor(player))
+				self:effectcolor2(Color.White)
 			end
 		end
 	end
 
-	row[#row+1] = LoadFont(Font)..{
-		Name="Rank",
-		Text=i..". ",
-		InitCommand=function(self) self:horizalign(right):xy(-120, row_index*row_height) end,
+	row[#row + 1] = LoadFont(Font) .. {
+		Name = "Rank",
+		Text = i .. ". ",
+		InitCommand = function(self) self:horizalign(right):xy(-120, row_index * row_height) end,
 	}
 
-	row[#row+1] = LoadFont(Font)..{
-		Name="Name",
-		Text=name,
-		InitCommand=function(self) self:horizalign(left):xy(-110, row_index*row_height) end,
+	row[#row + 1] = LoadFont(Font) .. {
+		Name = "Name",
+		Text = name,
+		InitCommand = function(self) self:horizalign(center):xy(-75, row_index * row_height):maxwidth(80) end,
 	}
 
-	row[#row+1] = LoadFont(Font)..{
-		Name="Score",
-		Text=score,
-		InitCommand=function(self) self:horizalign(left):xy(-24, row_index*row_height) end,
+	row[#row + 1] = LoadFont(Font) .. {
+		Name = "Score",
+		Text = score,
+		InitCommand = function(self) self:horizalign(left):xy(-24, row_index * row_height) end,
 	}
 
-	row[#row+1] = LoadFont(Font)..{
-		Name="Date",
-		Text=date,
-		InitCommand=function(self) self:horizalign(left):xy(50, row_index*row_height) end,
+	row[#row + 1] = LoadFont(Font) .. {
+		Name = "Date",
+		Text = date,
+		InitCommand = function(self) self:horizalign(left):xy(50, row_index * row_height) end,
 	}
 
-	af[#af+1] = row
+	af[#af + 1] = row
 
 	row_index = row_index + 1
 end

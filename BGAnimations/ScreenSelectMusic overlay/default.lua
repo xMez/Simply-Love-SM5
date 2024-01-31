@@ -57,6 +57,9 @@ local af = Def.ActorFrame{
 	-- Banner Art
 	LoadActor("./Banner.lua"),
 
+	-- Scorebox for machine scores
+	LoadActor("./Scorebox.lua"),
+
 	-- ---------------------------------------------------
 	-- finally, load the overlay used for sorting the MusicWheel (and more), hidden by default
 	LoadActor("./SortMenu/default.lua"),
